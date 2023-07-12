@@ -179,7 +179,6 @@ public class HttpServletUtil {
 	/**
 	 * 支持断点续传的驱动下载
 	 */
-	@SuppressWarnings("deprecation")
 	public static void downloadFileRanges(
 			HttpServletRequest request, 
 			HttpServletResponse response, 
@@ -200,7 +199,6 @@ public class HttpServletUtil {
 		HttpServletUtil.setHeader(response, "Accept-Ranges", "bytes");
 		
 		long pos = 0, last = fileSize - 1, sum = 0;// pos开始读取位置; last最后读取位置; sum记录总共已经读取了多少字节
-		long rangLength = last - pos + 1;// 总共需要读取的字节
 		String requestRange = HttpServletUtil.getHeader(request, "Range");
 		String safeRequestRange = requestRange;
 		HttpServletUtil.setStatus(response, HttpServletResponse.SC_PARTIAL_CONTENT);
@@ -218,6 +216,7 @@ public class HttpServletUtil {
 			pos = 0;
 		}
 		
+		long rangLength = last - pos + 1;// 总共需要读取的字节
 		String contentRange = new StringBuffer("bytes ").append(pos).append("-").append(last).append("/").append(fileSize).toString();
 		HttpServletUtil.setHeader(response, "Content-Range", contentRange);
 		HttpServletUtil.addHeader(response, "Content-Length", String.valueOf(rangLength));

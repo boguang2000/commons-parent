@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>cn.aotcloud</groupId>
 		<artifactId>commons-parent</artifactId>
-		<version>1.5.0</version>
+		<version>1.5.1</version>
 	</parent>
 	<artifactId>commons-security</artifactId>
 	<packaging>jar</packaging>
