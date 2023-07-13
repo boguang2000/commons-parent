@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -15,6 +16,9 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StreamUtils;
 
+import com.google.common.collect.Lists;
+
+@SuppressWarnings("deprecation")
 public class FileUtil extends FileUtils {
 
 	public static File newFile(final String pathname) {
@@ -56,6 +60,14 @@ public class FileUtil extends FileUtils {
 	
 	public static File[] listFiles(File searchFile, FilenameFilter filter) {
 		return searchFile.listFiles(filter);
+	}
+	
+	public static List<String> listFiles(File file) {
+		if(file != null) {
+			return Arrays.asList(file.list());
+		} else {
+			return Lists.newArrayList();
+		}
 	}
 	
 	public static boolean exists(final File file) {
@@ -137,7 +149,6 @@ public class FileUtil extends FileUtils {
 		org.apache.commons.io.FileUtils.write(FileUtil.newFile(pathname), content, "UTF-8");
 	}
 	
-	@SuppressWarnings("deprecation")
 	public static void write(InputStream in, String pathname) throws IOException {
 		try (FileOutputStream out = new FileOutputStream(pathname)) {
 			StreamUtils.copy(in, out);

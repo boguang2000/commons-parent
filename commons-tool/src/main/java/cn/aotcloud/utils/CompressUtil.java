@@ -276,7 +276,6 @@ public class CompressUtil {
      * 解压 zip 文件
      * @throws Exception
      */
-	@SuppressWarnings("deprecation")
 	public static List<String> unZip(InputStream input, String fileId, String scanDir) throws IOException {
     	int BUFFER_SIZE = 1024;
         File destFile = FileUtil.newFile(scanDir, FilenameUtils.normalize(fileId));

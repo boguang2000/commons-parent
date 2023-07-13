@@ -26,7 +26,8 @@ public class RedisConfig {
 	
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
-    public LettuceConnectionFactory lettuceConnectionFactory(RedisSafeProperties redisSafeProperties, RedisProperties redisProperties) {
+    @SuppressWarnings("deprecation")
+	public LettuceConnectionFactory lettuceConnectionFactory(RedisSafeProperties redisSafeProperties, RedisProperties redisProperties) {
 		String pw = getPassword(redisSafeProperties, redisProperties);
 		GenericObjectPoolConfig<Object> genericObjectPoolConfig = null;
 		LettucePoolingClientConfiguration clientConfig = null;

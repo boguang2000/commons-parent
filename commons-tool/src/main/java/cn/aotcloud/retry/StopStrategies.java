@@ -89,7 +89,8 @@ public final class StopStrategies {
 
     @Immutable
     private static final class NeverStopStrategy implements StopStrategy {
-        @Override
+        @SuppressWarnings("rawtypes")
+		@Override
         public boolean shouldStop(Attempt failedAttempt) {
             return false;
         }
@@ -104,7 +105,8 @@ public final class StopStrategies {
             this.maxAttemptNumber = maxAttemptNumber;
         }
 
-        @Override
+        @SuppressWarnings("rawtypes")
+		@Override
         public boolean shouldStop(Attempt failedAttempt) {
             return failedAttempt.getAttemptNumber() >= maxAttemptNumber;
         }
@@ -119,7 +121,8 @@ public final class StopStrategies {
             this.maxDelay = maxDelay;
         }
 
-        @Override
+        @SuppressWarnings("rawtypes")
+		@Override
         public boolean shouldStop(Attempt failedAttempt) {
             return failedAttempt.getDelaySinceFirstAttempt() >= maxDelay;
         }

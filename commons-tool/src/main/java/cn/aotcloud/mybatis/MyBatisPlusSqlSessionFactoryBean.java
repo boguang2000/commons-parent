@@ -33,7 +33,6 @@ public class MyBatisPlusSqlSessionFactoryBean extends MybatisSqlSessionFactoryBe
         this.configuration = configuration;
     }
 
-    @SuppressWarnings("deprecation")
 	@Override
     protected SqlSessionFactory buildSqlSessionFactory() throws Exception {
         SqlSessionFactory sqlSessionFactory = super.buildSqlSessionFactory();

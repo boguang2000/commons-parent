@@ -31,7 +31,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Immutable
 public final class RetryException extends Exception {
 
-    private final int numberOfFailedAttempts;
+	private static final long serialVersionUID = 1L;
+	
+	private final int numberOfFailedAttempts;
     private final Attempt<?> lastFailedAttempt;
 
     /**

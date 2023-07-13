@@ -84,11 +84,13 @@ public class AttemptTimeLimiters {
         private final long duration;
         private final TimeUnit timeUnit;
 
-        public FixedAttemptTimeLimit(long duration, @Nonnull TimeUnit timeUnit) {
+        @SuppressWarnings("deprecation")
+		public FixedAttemptTimeLimit(long duration, @Nonnull TimeUnit timeUnit) {
             this(new SimpleTimeLimiter(), duration, timeUnit);
         }
 
-        public FixedAttemptTimeLimit(long duration, @Nonnull TimeUnit timeUnit, @Nonnull ExecutorService executorService) {
+        @SuppressWarnings("deprecation")
+		public FixedAttemptTimeLimit(long duration, @Nonnull TimeUnit timeUnit, @Nonnull ExecutorService executorService) {
             this(new SimpleTimeLimiter(executorService), duration, timeUnit);
         }
 
@@ -100,7 +102,8 @@ public class AttemptTimeLimiters {
             this.timeUnit = timeUnit;
         }
 
-        @Override
+        @SuppressWarnings("deprecation")
+		@Override
         public V call(Callable<V> callable) throws Exception {
             return timeLimiter.callWithTimeout(callable, duration, timeUnit, true);
         }

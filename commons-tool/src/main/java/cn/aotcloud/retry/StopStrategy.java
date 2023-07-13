@@ -29,5 +29,6 @@ public interface StopStrategy {
      * @param failedAttempt the previous failed {@code Attempt}
      * @return <code>true</code> if the retryer must stop, <code>false</code> otherwise
      */
-    boolean shouldStop(Attempt failedAttempt);
+    @SuppressWarnings("rawtypes")
+	boolean shouldStop(Attempt failedAttempt);
 }

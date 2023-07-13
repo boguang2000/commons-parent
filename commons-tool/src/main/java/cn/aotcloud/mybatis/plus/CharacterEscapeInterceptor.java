@@ -53,7 +53,7 @@ public class CharacterEscapeInterceptor implements Interceptor {
     public void setProperties(Properties properties) {
     }
     
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String modifyLikeSql(String sql, Object parameterObject, BoundSql boundSql) {
         if (parameterObject instanceof HashMap) {
         } else {
