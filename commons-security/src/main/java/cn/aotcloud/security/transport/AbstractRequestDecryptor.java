@@ -49,25 +49,27 @@ public abstract class AbstractRequestDecryptor extends HttpTextEncryptor impleme
 
     protected String decryptData(String data) {
         String[] certificate = data.split(CRYPTO_SEPARATOR);
-        if(certificate.length !=2 || StringUtils.isEmpty(certificate[0]) || StringUtils.isEmpty(certificate[1])) {
+        if(certificate.length !=3 || StringUtils.isEmpty(certificate[0]) || StringUtils.isEmpty(certificate[1]) || StringUtils.isEmpty(certificate[2])) {
             throw new BaseException("数据完整性被破坏。");
         }
         String encryptedSm4RequestData = certificate[0];
         String sm4Key = getTextEncryptor().decrypt(certificate[1]);
+        String sm4Iv = getTextEncryptor().decrypt(certificate[2]);
         Sm4KeyHolder.setSm4Key(sm4Key);
-        TextEncryptor sm4TextEncryptor = new HttpCryptoSm4Certificate(sm4Key).getTextEncryptor();
+        Sm4KeyHolder.setSm4Iv(sm4Iv);
+        TextEncryptor sm4TextEncryptor = new HttpCryptoSm4Certificate(sm4Key, sm4Iv).getTextEncryptor();
         return sm4TextEncryptor.decrypt(encryptedSm4RequestData);
     }
 
-    protected String setSm4KeyHolder(String data) {
+    protected void setSm4KeyHolder(String data) {
     	String[] certificate = data.split(CRYPTO_SEPARATOR);
-        if(certificate.length !=2 || StringUtils.isEmpty(certificate[0]) || StringUtils.isEmpty(certificate[1])) {
+        if(certificate.length !=3 || StringUtils.isEmpty(certificate[0]) || StringUtils.isEmpty(certificate[1]) || StringUtils.isEmpty(certificate[2])) {
             throw new BaseException("数据完整性被破坏。");
         }
         String sm4Key = getTextEncryptor().decrypt(certificate[1]);
+        String sm4Iv = getTextEncryptor().decrypt(certificate[2]);
         Sm4KeyHolder.setSm4Key(sm4Key);
-        
-        return Sm4KeyHolder.getSm4Key();
+        Sm4KeyHolder.setSm4Iv(sm4Iv);
     }
     
     /**

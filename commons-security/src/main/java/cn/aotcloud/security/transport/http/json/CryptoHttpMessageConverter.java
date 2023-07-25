@@ -113,48 +113,17 @@ public class CryptoHttpMessageConverter extends AbstractHttpMessageConverter<Obj
     public List<MediaType> getSupportedMediaTypes() {
         return Collections.singletonList(CryptoMediaType.APPLICATION_SM4_PUBLIC_JSON_UTF8);
     }
-//
-//    @Override
-//    protected MediaType getDefaultContentType(Object o) throws IOException {
-//        return super.getDefaultContentType(o);
-//    }
 
     @Override
     protected void writeInternal(Object o, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
-//        if (!safeProperties.getHttp()
-//                .getResponse()
-//                .shouldResponseCrypto(HttpRequestUtil.getHttpServletRequestFromThreadLocal().getRequestURI())) {
-//            super.write(o, CryptoMediaType.APPLICATION_JSON, outputMessage);
-//        }
-    	//String responseJsonText = o instanceof String ? (String) o : JSONObject.toJSONString(o);
     	String responseJsonText = o instanceof String ? (String) o : jacksonConverter.getObjectMapper().writeValueAsString(o);
-    	HttpCryptoSm4Certificate httpCryptoSm4Certificate = StringUtils.isEmpty(Sm4KeyHolder.getSm4Key()) ? new HttpCryptoSm4Certificate() : new HttpCryptoSm4Certificate(Sm4KeyHolder.getSm4Key());
-//        Sm4KeyHolder.clear();
+    	HttpCryptoSm4Certificate httpCryptoSm4Certificate = StringUtils.isEmpty(Sm4KeyHolder.getSm4Key()) && StringUtils.isEmpty(Sm4KeyHolder.getSm4Iv()) 
+    			? new HttpCryptoSm4Certificate() 
+    			: new HttpCryptoSm4Certificate(Sm4KeyHolder.getSm4Key(), Sm4KeyHolder.getSm4Iv());
+        //Sm4KeyHolder.clear();
         outputMessage.getHeaders().set("X-AC-ENCRYPTO", "true");
         String encryptedResponseText = httpCryptoSm4Certificate.getTextEncryptor().encrypt(responseJsonText);
-//        CryptoServletServerHttpResponse outputMessageToUse = new CryptoServletServerHttpResponse(outputMessage) ;
         stringHttpMessageConverter.write(encryptedResponseText, CryptoMediaType.APPLICATION_SM4_PUBLIC_JSON_UTF8, outputMessage);
     }
 
-
-//    static class CryptoServletServerHttpResponse implements  HttpOutputMessage{
-//
-//        private final HttpOutputMessage httpOutputMessage;
-//
-//        public CryptoServletServerHttpResponse(HttpOutputMessage httpOutputMessage) {
-//            this.httpOutputMessage = httpOutputMessage;
-//        }
-//
-//        @Override
-//        public HttpHeaders getHeaders() {
-//            HttpHeaders headers = httpOutputMessage.getHeaders();
-//            headers.put("content-type", Collections.singletonList(CryptoMediaType.APPLICATION_SM4_PUBLIC_JSON_UTF8_VALUE));
-//            return headers;
-//        }
-//
-//        @Override
-//        public OutputStream getBody() throws IOException {
-//            return httpOutputMessage.getBody();
-//        }
-//    }
 }
