@@ -1,5 +1,6 @@
 package cn.aotcloud.security.transport;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import cn.aotcloud.crypto.sm.SM4TextEncryptor;
@@ -20,11 +21,21 @@ public class HttpCryptoSm4Certificate {
     public HttpCryptoSm4Certificate() {
     }
 
+    public HttpCryptoSm4Certificate(String secretKey) {
+        this.secretKey = secretKey;
+        this.secretIv = null;
+    }
+    
     public HttpCryptoSm4Certificate(String secretKey, String secretIv) {
         this.secretKey = secretKey;
         this.secretIv = secretIv;
     }
 
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+        this.secretIv = null;
+    }
+    
     public void setSecretKey(String secretKey, String secretIv) {
         this.secretKey = secretKey;
         this.secretIv = secretIv;
@@ -36,7 +47,11 @@ public class HttpCryptoSm4Certificate {
 
     public TextEncryptor getTextEncryptor() {
         if (textEncryptor == null) {
-            this.textEncryptor = SMCryptoFactory.createSM4TextEncryptor(secretKey, secretIv, SM4TextEncryptor.SM4_CBC, SMImplMode.java);
+        	if(StringUtils.isBlank(this.secretIv)) {
+        		this.textEncryptor = SMCryptoFactory.createSM4TextEncryptor(secretKey, SMImplMode.java);
+        	} else {
+        		this.textEncryptor = SMCryptoFactory.createSM4TextEncryptor(secretKey, secretIv, SM4TextEncryptor.SM4_CBC, SMImplMode.java);
+        	}
         }
         return textEncryptor;
     }
