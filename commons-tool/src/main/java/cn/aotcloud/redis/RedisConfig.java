@@ -25,10 +25,21 @@ import cn.aotcloud.smcrypto.exception.InvalidKeyException;
 public class RedisConfig {
 	
 	protected Logger logger = LoggerFactory.getLogger(getClass());
-
+	
+	protected final RedisSafeProperties redisSafeProperties;
+	
+	protected final RedisProperties redisProperties;
+	
+	public RedisConfig(RedisSafeProperties redisSafeProperties, RedisProperties redisProperties) {
+		this.redisSafeProperties = redisSafeProperties;
+		this.redisProperties = redisProperties;
+	}
+	
     @SuppressWarnings("deprecation")
-	public LettuceConnectionFactory lettuceConnectionFactory(RedisSafeProperties redisSafeProperties, RedisProperties redisProperties) {
-		String pw = getPassword(redisSafeProperties, redisProperties);
+	public LettuceConnectionFactory lettuceConnectionFactory(String sm4K, String sm4v) {
+    	String host = this.getHost(sm4K, sm4v);
+    	String username = this.getUsername(sm4K, sm4v);
+    	String password = this.getPassword(sm4K, sm4v);
 		GenericObjectPoolConfig<Object> genericObjectPoolConfig = null;
 		LettucePoolingClientConfiguration clientConfig = null;
 		Lettuce lettuce = redisProperties.getLettuce();
@@ -62,10 +73,13 @@ public class RedisConfig {
 			
         RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
         redisStandaloneConfiguration.setDatabase(redisProperties.getDatabase());
-        redisStandaloneConfiguration.setHostName(redisProperties.getHost());
+        redisStandaloneConfiguration.setHostName(host);
         redisStandaloneConfiguration.setPort(redisProperties.getPort());
-        if(StringUtils.isNotBlank(pw)) {
-        	redisStandaloneConfiguration.setPassword(RedisPassword.of(pw));
+        if(StringUtils.isNotBlank(username)) {
+        	redisStandaloneConfiguration.setUsername(username);
+		}
+        if(StringUtils.isNotBlank(password)) {
+        	redisStandaloneConfiguration.setPassword(RedisPassword.of(password));
 		}
         
         if(clientConfig != null) {
@@ -77,14 +91,74 @@ public class RedisConfig {
         }
     }
 	
-	public String getPassword(RedisSafeProperties redisSafeProperties, RedisProperties redisProperties) {
-		String pd = redisProperties.getPassword();
+	public String getHost() {
+		return this.getHost("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	
+	public String getUsername() {
+		return this.getUsername("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	
+	public String getPassword() {
+		return this.getPassword("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	
+	public String getHost(String sm4K, String sm4v) {
+		String dz = redisSafeProperties.getDz();
+		if(StringUtils.isNotBlank(dz)) {
+			if(StringUtils.startsWith(dz, "enc(")) {
+				try {
+					dz = StringUtils.substringBetween(dz, "enc(", ")");
+					dz = Sm4Utils.CBC.decryptToText(dz, sm4K, sm4v);
+					logger.info("Redis地址解密后装载成功");
+				} catch (InvalidCryptoDataException e) {
+					logger.error("Redis地址解密失败：{}", e.getMessage());
+				} catch (InvalidKeyException e) {
+					logger.error("Redis地址解密失败：{}", e.getMessage());
+				}
+			} else {
+				logger.info("Redis地址明文装载成功");
+			}
+			return dz;
+		} else {
+			logger.info("Redis地址默认装载成功");
+			return redisProperties.getHost();
+		}
+	}
+	
+	public String getUsername(String sm4K, String sm4v) {
+		String un = redisSafeProperties.getUn();
+		if(StringUtils.isNotBlank(un)) {
+			if(StringUtils.startsWith(un, "enc(")) {
+				try {
+					un = StringUtils.substringBetween(un, "enc(", ")");
+					un = Sm4Utils.CBC.decryptToText(un, sm4K, sm4v);
+					logger.info("Redis用户名解密后装载成功");
+				} catch (InvalidCryptoDataException e) {
+					logger.error("Redis用户名解密失败：{}", e.getMessage());
+				} catch (InvalidKeyException e) {
+					logger.error("Redis用户名解密失败：{}", e.getMessage());
+				}
+			} else {
+				logger.info("Redis用户名明文装载成功");
+			}
+			return un;
+		} else if(StringUtils.isNotBlank(redisProperties.getUsername())) {
+			logger.info("Redis用户名默认装载成功");
+			return redisProperties.getUsername();
+		} else {
+			logger.info("Redis无用户名装载成功");
+			return null;
+		}
+	}
+	
+	public String getPassword(String sm4K, String sm4v) {
 		String pw = redisSafeProperties.getPw();
 		if(StringUtils.isNotBlank(pw)) {
 			if(StringUtils.startsWith(pw, "enc(")) {
 				try {
 					pw = StringUtils.substringBetween(pw, "enc(", ")");
-					pw = Sm4Utils.CBC.decryptToText(pw, "5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+					pw = Sm4Utils.CBC.decryptToText(pw, sm4K, sm4v);
 					logger.info("Redis密码解密后装载成功");
 				} catch (InvalidCryptoDataException e) {
 					logger.error("Redis密码解密失败：{}", e.getMessage());
@@ -95,9 +169,9 @@ public class RedisConfig {
 				logger.info("Redis密码明文装载成功");
 			}
 			return pw;
-		} else if(StringUtils.isNotBlank(pd)) {
+		} else if(StringUtils.isNotBlank(redisProperties.getPassword())) {
 			logger.info("Redis密码默认装载成功");
-			return pd;
+			return redisProperties.getPassword();
 		} else {
 			logger.info("Redis无密码装载成功");
 			return null;

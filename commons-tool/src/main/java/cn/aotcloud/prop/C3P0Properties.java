@@ -66,65 +66,11 @@ public class C3P0Properties {
 	public void setDriverClass(String driverClass) {
 		this.driverClass = driverClass;
 	}
-	public String getJdbcUrl() {
-		if(StringUtils.isNotBlank(this.jdbcUrl)) {
-			logger.info("数据库地址默认装载成功");
-		} else if(StringUtils.startsWith(this.getDz(), "enc(")) {
-			this.jdbcUrl = StringUtils.substringBetween(this.getDz(), "enc(", ")");
-			try {
-				this.jdbcUrl = Sm4Utils.CBC.decryptToText(this.jdbcUrl, "5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
-				logger.info("数据库地址解密后装载成功");
-			} catch (InvalidCryptoDataException | InvalidKeyException e) {
-				logger.error("数据库地址解密失败：{}", e.getMessage());
-			}
-		} else {
-			this.jdbcUrl = this.getDz();
-			logger.info("数据库地址明文装载成功");
-		}
-		
-		return this.jdbcUrl;
-	}
 	public void setJdbcUrl(String jdbcUrl) {
 		this.jdbcUrl = jdbcUrl;
 	}
-	public String getUser() {
-		if(StringUtils.isNotBlank(this.user)) {
-			logger.info("数据库用户名默认装载成功");
-		} else if(StringUtils.startsWith(this.getUn(), "enc(")) {
-			this.user = StringUtils.substringBetween(this.getUn(), "enc(", ")");
-			try {
-				this.user = Sm4Utils.CBC.decryptToText(this.user, "5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
-				logger.info("数据库用户名解密后装载成功");
-			} catch (InvalidCryptoDataException | InvalidKeyException e) {
-				logger.error("数据库用户名解密失败：{}", e.getMessage());
-			}
-		} else {
-			this.user = this.getUn();
-			logger.info("数据库用户名明文装载成功");
-		}
-		
-		return this.user;
-	}
 	public void setUser(String user) {
 		this.user = user;
-	}
-	public String getPassword() {
-		if(StringUtils.isNotBlank(this.password)) {
-			logger.info("数据库密码默认装载成功");
-		} else if(StringUtils.startsWith(this.getPw(), "enc(")) {
-			this.password = StringUtils.substringBetween(this.getPw(), "enc(", ")");
-			try {
-				this.password = Sm4Utils.CBC.decryptToText(this.password, "5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
-				logger.info("数据库密码解密后装载成功");
-			} catch (InvalidCryptoDataException | InvalidKeyException e) {
-				logger.error("数据库密码解密失败：{}", e.getMessage());
-			}
-		} else {
-			this.password = this.getPw();
-			logger.info("数据库密码明文装载成功");
-		}
-		
-		return this.password;
 	}
 	public void setPassword(String password) {
 		this.password = password;
@@ -374,5 +320,68 @@ public class C3P0Properties {
 	}
 	public void setUsesTraditionalReflectiveProxies(boolean usesTraditionalReflectiveProxies) {
 		this.usesTraditionalReflectiveProxies = usesTraditionalReflectiveProxies;
+	}
+	public String getJdbcUrl() {
+		return this.getJdbcUrl("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	public String getUser() {
+		return this.getUser("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	public String getPassword() {
+		return this.getPassword("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	public String getJdbcUrl(String sm4K, String sm4v) {
+		if(StringUtils.isNotBlank(this.jdbcUrl)) {
+			logger.info("数据库地址默认装载成功");
+		} else if(StringUtils.startsWith(this.getDz(), "enc(")) {
+			this.jdbcUrl = StringUtils.substringBetween(this.getDz(), "enc(", ")");
+			try {
+				this.jdbcUrl = Sm4Utils.CBC.decryptToText(this.jdbcUrl, sm4K, sm4v);
+				logger.info("数据库地址解密后装载成功");
+			} catch (InvalidCryptoDataException | InvalidKeyException e) {
+				logger.error("数据库地址解密失败：{}", e.getMessage());
+			}
+		} else {
+			this.jdbcUrl = this.getDz();
+			logger.info("数据库地址明文装载成功");
+		}
+		
+		return this.jdbcUrl;
+	}
+	public String getUser(String sm4K, String sm4v) {
+		if(StringUtils.isNotBlank(this.user)) {
+			logger.info("数据库用户名默认装载成功");
+		} else if(StringUtils.startsWith(this.getUn(), "enc(")) {
+			this.user = StringUtils.substringBetween(this.getUn(), "enc(", ")");
+			try {
+				this.user = Sm4Utils.CBC.decryptToText(this.user, sm4K, sm4v);
+				logger.info("数据库用户名解密后装载成功");
+			} catch (InvalidCryptoDataException | InvalidKeyException e) {
+				logger.error("数据库用户名解密失败：{}", e.getMessage());
+			}
+		} else {
+			this.user = this.getUn();
+			logger.info("数据库用户名明文装载成功");
+		}
+		
+		return this.user;
+	}
+	public String getPassword(String sm4K, String sm4v) {
+		if(StringUtils.isNotBlank(this.password)) {
+			logger.info("数据库密码默认装载成功");
+		} else if(StringUtils.startsWith(this.getPw(), "enc(")) {
+			this.password = StringUtils.substringBetween(this.getPw(), "enc(", ")");
+			try {
+				this.password = Sm4Utils.CBC.decryptToText(this.password, sm4K, sm4v);
+				logger.info("数据库密码解密后装载成功");
+			} catch (InvalidCryptoDataException | InvalidKeyException e) {
+				logger.error("数据库密码解密失败：{}", e.getMessage());
+			}
+		} else {
+			this.password = this.getPw();
+			logger.info("数据库密码明文装载成功");
+		}
+		
+		return this.password;
 	}
 }

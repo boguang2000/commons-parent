@@ -11,6 +11,8 @@ public class RedisSafeProperties {
 	
 	private String dz;
 	
+	private String un;
+	
 	private String pw;
 	
 	public String getDz() {
@@ -19,11 +21,16 @@ public class RedisSafeProperties {
 	public void setDz(String dz) {
 		this.dz = dz;
 	}
+	public String getUn() {
+		return un;
+	}
+	public void setUn(String un) {
+		this.un = un;
+	}
 	public String getPw() {
 		return pw;
 	}
 	public void setPw(String pw) {
 		this.pw = pw;
 	}
-	
 }

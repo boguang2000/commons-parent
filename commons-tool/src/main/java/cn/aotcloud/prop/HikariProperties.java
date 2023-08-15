@@ -47,13 +47,27 @@ public class HikariProperties extends DataSourceProperties {
 	
 	@Override
 	public String getUrl() {
+		return this.getUrl("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	
+	@Override
+	public String getUsername() {
+		return this.getUsername("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	
+	@Override
+	public String getPassword() {
+		return this.getPassword("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+	}
+	
+	public String getUrl(String sm4K, String sm4v) {
 		String url = super.getUrl();
 		if(StringUtils.isNotBlank(super.getUrl())) {
 			logger.info("数据库地址默认装载成功");
 		} else if(StringUtils.startsWith(this.getDz(), "enc(")) {
 			url = StringUtils.substringBetween(this.getDz(), "enc(", ")");
 			try {
-				url = Sm4Utils.CBC.decryptToText(url, "5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+				url = Sm4Utils.CBC.decryptToText(url, sm4K, sm4v);
 				logger.info("数据库地址解密后装载成功");
 			} catch (InvalidCryptoDataException | InvalidKeyException e) {
 				logger.error("数据库地址解密失败：{}", e.getMessage());
@@ -66,15 +80,14 @@ public class HikariProperties extends DataSourceProperties {
 		return url;
 	}
 	
-	@Override
-	public String getUsername() {
+	public String getUsername(String sm4K, String sm4v) {
 		String username = super.getUsername();
 		if(StringUtils.isNotBlank(super.getUsername())) {
 			logger.info("数据库用户名默认装载成功");
 		} else if(StringUtils.startsWith(this.getUn(), "enc(")) {
 			username = StringUtils.substringBetween(this.getUn(), "enc(", ")");
 			try {
-				username = Sm4Utils.CBC.decryptToText(username, "5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+				username = Sm4Utils.CBC.decryptToText(username, sm4K, sm4v);
 				logger.info("数据库用户名解密后装载成功");
 			} catch (InvalidCryptoDataException | InvalidKeyException e) {
 				logger.error("数据库用户名解密失败：{}", e.getMessage());
@@ -87,15 +100,14 @@ public class HikariProperties extends DataSourceProperties {
 		return username;
 	}
 	
-	@Override
-	public String getPassword() {
+	public String getPassword(String sm4K, String sm4v) {
 		String password = super.getPassword();
 		if(StringUtils.isNotBlank(super.getPassword())) {
 			logger.info("数据库密码默认装载成功");
 		} else if(StringUtils.startsWith(this.getPw(), "enc(")) {
 			password = StringUtils.substringBetween(this.getPw(), "enc(", ")");
 			try {
-				password = Sm4Utils.CBC.decryptToText(password, "5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D");
+				password = Sm4Utils.CBC.decryptToText(password, sm4K, sm4v);
 				logger.info("数据库密码解密后装载成功");
 			} catch (InvalidCryptoDataException | InvalidKeyException e) {
 				logger.error("数据库密码解密失败：{}", e.getMessage());
