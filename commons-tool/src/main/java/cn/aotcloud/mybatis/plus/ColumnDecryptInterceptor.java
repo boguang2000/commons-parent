@@ -70,8 +70,8 @@ public abstract class ColumnDecryptInterceptor implements Interceptor {
                 //只支持String的解密
                 if (object instanceof String) {
                     String value = (String) object;
-                    String key = this.getKey(result);
-                    String data = this.decryptData(resultClass.getSimpleName(), field.getName(), key, value);
+                    //String key = this.getKey(result);
+                    String data = this.decryptData(resultClass.getSimpleName(), field.getName(), result, value);
                     field.set(result, data);
                 }
             }
@@ -103,5 +103,5 @@ public abstract class ColumnDecryptInterceptor implements Interceptor {
     	return null;
     }
     
-    public abstract String decryptData(String className, String fieldName, String key, String data);
+    public abstract String decryptData(String className, String fieldName, Object result, String data);
 }
