@@ -49,21 +49,6 @@ public class HikariProperties extends DataSourceProperties {
 		this.pw = pw;
 	}
 	
-	@Override
-	public String getUrl() {
-		return this.getUrl("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D", "!$A0{b8%]$E0F)F7");
-	}
-	
-	@Override
-	public String getUsername() {
-		return this.getUsername("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D", "!$A0{b8%]$E0F)F7");
-	}
-	
-	@Override
-	public String getPassword() {
-		return this.getPassword("5261C80B313B514C1A83699E904014A0", "0785E4AD00F457A8370057765B3C155D", "!$A0{b8%]$E0F)F7");
-	}
-	
 	public String getUrl(String sm4K, String sm4v, String salt) {
 		String url = super.getUrl();
 		if(StringUtils.isNotBlank(super.getUrl())) {
