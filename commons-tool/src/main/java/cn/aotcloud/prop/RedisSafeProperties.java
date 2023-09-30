@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "spring.redis")
-public class RedisProperties extends org.springframework.boot.autoconfigure.data.redis.RedisProperties {
+public class RedisSafeProperties {
 	
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 	
