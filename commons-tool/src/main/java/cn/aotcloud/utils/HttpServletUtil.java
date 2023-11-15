@@ -23,7 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.util.MultiValueMap;
 
-import cn.aotcloud.http.BodyReaderHttpServletRequestWrapper;
+import cn.aotcloud.filter.BodyReaderHttpServletRequestWrapper;
 import eu.bitwalker.useragentutils.Browser;
 
 public class HttpServletUtil {
