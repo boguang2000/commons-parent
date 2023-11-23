@@ -1,5 +1,7 @@
 package cn.aotcloud.security.oncetoken.support;
 
+import cn.aotcloud.exception.BaseExceptionEmpty;
+import cn.aotcloud.exception.ExceptionUtil;
 import cn.aotcloud.security.oncetoken.IllegalRequestTokenException;
 import cn.aotcloud.security.oncetoken.OnceProtocol;
 import cn.aotcloud.security.oncetoken.RequestToken;
@@ -10,8 +12,11 @@ import cn.aotcloud.security.oncetoken.RequestTokenValidator;
 import cn.aotcloud.security.oncetoken.event.IllegalRequestTokenApplicationEvent;
 
 import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 import org.springframework.web.util.UrlPathHelper;
@@ -72,24 +77,24 @@ public class DefaultRequestTokenHandler implements RequestTokenHandler, Applicat
 
 	protected boolean matchRequest(HttpServletRequest request) {
 		String requestUri = urlPathHelper.getLookupPathForRequest(request);
-		return this.urls.stream()
+		boolean match = this.urls.stream()
 				.filter(url -> pathMatcher.match(url, requestUri))
 				.findAny()
 				.isPresent();
+		
+		return match || (StringUtils.equalsIgnoreCase(request.getMethod(), HttpMethod.POST.name()) && !StringUtils.contains(request.getContentType(), MediaType.MULTIPART_FORM_DATA_VALUE));
 	}
 
 	@Override
 	public void validate(HttpServletRequest request) throws IllegalRequestTokenException {
 		if (support(request)) {
 			RequestToken requestTokenFromRequest = parseRequestToken(request);
-
-			if (requestTokenFromRequest != RequestToken.ILLEGAL_REQUEST_TOKEN
-					&& requestTokenValidator.validate(requestTokenFromRequest)) {
+			try {
+				requestTokenValidator.validate(requestTokenFromRequest);
 				requestTokenStore.save(requestTokenFromRequest);
-			} else {
-				applicationEventPublisher.publishEvent(new IllegalRequestTokenApplicationEvent(
-						requestTokenFromRequest != null ? requestTokenFromRequest : RequestToken.ILLEGAL_REQUEST_TOKEN));
-				throw new IllegalRequestTokenException();
+			} catch(IllegalRequestTokenException e) {
+				applicationEventPublisher.publishEvent(new IllegalRequestTokenApplicationEvent(requestTokenFromRequest != null ? requestTokenFromRequest : RequestToken.ILLEGAL_REQUEST_TOKEN));
+				throw new BaseExceptionEmpty(ExceptionUtil.getMessage(e));
 			}
 		}
 	}

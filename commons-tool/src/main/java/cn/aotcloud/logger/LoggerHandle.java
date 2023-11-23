@@ -11,11 +11,11 @@ public class LoggerHandle {
 	protected Logger logger = null;
 	
 	public LoggerHandle(Class<?> clazz) {
-		this.logger =  LoggerFactory.getLogger(clazz);
+		this.logger = LoggerFactory.getLogger(clazz);
 	}
 	
 	public LoggerHandle(String name) {
-		this.logger =  LoggerFactory.getLogger(name);
+		this.logger = LoggerFactory.getLogger(name);
 	}
 	
 	public void setUserInfo(String userInfo) {
@@ -46,8 +46,8 @@ public class LoggerHandle {
 		this.logger.info(getUserInfo(true) + msg);
 	}
 	
-	public void info(boolean conf, String msg) {
-		this.logger.info(getUserInfo(true, conf) + msg);
+	public void info(boolean userinfo, String msg) {
+		this.logger.info(userinfo ? getUserInfo(true) : "" + msg);
 	}
 	
 	public void info(String format, Object... arguments) {
@@ -74,6 +74,10 @@ public class LoggerHandle {
     	this.logger.error(getUserInfo(true) + msg);
     }
 
+    public void error(boolean userinfo, String msg) {
+    	this.logger.error(userinfo ? getUserInfo(true) : "" + msg);
+    }
+    
     public void error(String format, Object... arguments) {
     	this.logger.error(getUserInfo(true) + format, arguments);
     }

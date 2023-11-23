@@ -14,6 +14,5 @@ public interface RequestTokenExceptionHandler {
 	 * @param response
 	 * @param exception
 	 */
-	public void handle(HttpServletRequest request, HttpServletResponse response, 
-			IllegalRequestTokenException exception) throws IOException;
+	public void handle(HttpServletRequest request, HttpServletResponse response, IllegalRequestTokenException exception) throws IOException;
 }

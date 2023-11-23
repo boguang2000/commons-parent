@@ -17,5 +17,5 @@ public interface RequestTokenValidator {
      *
      * @param requestToken
      */
-    public boolean validate(RequestToken requestToken);
+    public void validate(RequestToken requestToken) throws IllegalRequestTokenException;
 }

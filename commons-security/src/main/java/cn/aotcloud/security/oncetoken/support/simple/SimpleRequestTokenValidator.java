@@ -2,6 +2,7 @@ package cn.aotcloud.security.oncetoken.support.simple;
 
 import cn.aotcloud.crypto.pcode.PcodeEncoder;
 import cn.aotcloud.logger.LoggerHandle;
+import cn.aotcloud.security.oncetoken.IllegalRequestTokenException;
 import cn.aotcloud.security.oncetoken.OnceProtocol;
 import cn.aotcloud.security.oncetoken.RequestToken;
 import cn.aotcloud.security.oncetoken.RequestTokenStore;
@@ -37,19 +38,16 @@ public class SimpleRequestTokenValidator implements RequestTokenValidator {
 
     @Override
     public boolean support(RequestToken requestToken) {
-        return requestToken != null && (StringUtils.isBlank(requestToken.getProtocol())
-                || StringUtils.equalsIgnoreCase(requestToken.getProtocol(), OnceProtocol.simple.name()));
+        return requestToken != null && (StringUtils.isBlank(requestToken.getProtocol()) || StringUtils.equalsIgnoreCase(requestToken.getProtocol(), OnceProtocol.simple.name()));
     }
 
     @Override
-    public boolean validate(RequestToken requestToken) {
-        if (requestToken != null &&
-                isValidTimestamp(requestToken.getCreateTime())
-                && isValidNonce(requestToken.getToken())
-                && isValidSign(requestToken)) {
-            return true;
-        }
-        return false;
+    public void validate(RequestToken requestToken) throws IllegalRequestTokenException {
+    	if(requestToken != null) {
+    		isValidTimestamp(requestToken.getCreateTime());
+            isValidNonce(requestToken.getToken());
+            isValidSign(requestToken);
+    	}
     }
 
     /**
@@ -64,12 +62,12 @@ public class SimpleRequestTokenValidator implements RequestTokenValidator {
      *            represented by this date
      * @return
      */
-    protected boolean isValidTimestamp(Long timestamp) {
+    protected void isValidTimestamp(Long timestamp) {
         boolean flag = timestamp != null && Math.abs(System.currentTimeMillis() - timestamp) <= timeinterval;
         if (!flag) {
-            logger.error("请求令牌时间戳不合法。");
+            logger.error(false, "防重放拦截：请求令牌时间戳不合法");
+            throw new IllegalRequestTokenException("防重放拦截：请求令牌时间戳不合法");
         }
-        return flag;
     }
 
     /**
@@ -82,14 +80,13 @@ public class SimpleRequestTokenValidator implements RequestTokenValidator {
      * @param nonce
      * @return
      */
-    protected boolean isValidNonce(String nonce) {
+    protected void isValidNonce(String nonce) {
         RequestToken requestTokenFromDb = requestTokenStore.getToken(nonce);
-        boolean flag = StringUtils.isNotBlank(nonce)
-                && (requestTokenFromDb == null || requestTokenFromDb.isExpired());
+        boolean flag = StringUtils.isNotBlank(nonce) && (requestTokenFromDb == null || requestTokenFromDb.isExpired());
         if (!flag) {
-            logger.error("请求令牌随机数不合法。");
+        	logger.error(false, "防重放拦截：请求令牌已经被使用过");
+        	throw new IllegalRequestTokenException("防重放拦截：请求令牌已经被使用过");
         }
-        return flag;
     }
 
     /**
@@ -102,13 +99,12 @@ public class SimpleRequestTokenValidator implements RequestTokenValidator {
      * @param requestTokenFromRequest
      * @return
      */
-    protected boolean isValidSign(RequestToken requestTokenFromRequest) {
-        boolean flag = pscodeEncoder.matches(
-                getRequestTokenAsStr(requestTokenFromRequest), requestTokenFromRequest.getSign());
+    protected void isValidSign(RequestToken requestTokenFromRequest) {
+        boolean flag = pscodeEncoder.matches(getRequestTokenAsStr(requestTokenFromRequest), requestTokenFromRequest.getSign());
         if (!flag) {
-            logger.error("请求令牌签名摘要不合法。");
+        	logger.error(false, "防重放拦截：请求令牌签名摘要不合法");
+        	throw new IllegalRequestTokenException("防重放拦截：请求令牌签名摘要不合法");
         }
-        return flag;
     }
 
     protected String getRequestTokenAsStr(RequestToken requestTokenFromRequest) {

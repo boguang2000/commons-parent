@@ -3,6 +3,7 @@ package cn.aotcloud.security.oncetoken.support.once2;
 import cn.aotcloud.crypto.EncryptionProperties;
 import cn.aotcloud.crypto.pcode.PcodeEncoder;
 import cn.aotcloud.crypto.sm.SM2TextEncryptor;
+import cn.aotcloud.security.oncetoken.IllegalRequestTokenException;
 import cn.aotcloud.security.oncetoken.OnceProtocol;
 import cn.aotcloud.security.oncetoken.RequestToken;
 import cn.aotcloud.security.oncetoken.RequestTokenStore;
@@ -33,10 +34,10 @@ public class Once2RequestTokenValidator extends SimpleRequestTokenValidator {
     }
 
     @Override
-    protected boolean isValidSign(RequestToken requestTokenFromRequest) {
+    protected void isValidSign(RequestToken requestTokenFromRequest) throws IllegalRequestTokenException {
         String sign = sm2TextEncryptor.decrypt(requestTokenFromRequest.getSign());
         requestTokenFromRequest.setSign(sign);
-        return super.isValidSign(requestTokenFromRequest);
+        super.isValidSign(requestTokenFromRequest);
     }
 
     @Override

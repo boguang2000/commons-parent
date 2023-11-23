@@ -1,18 +1,19 @@
 package cn.aotcloud.security.oncetoken;
 
-import cn.aotcloud.exception.BaseException;
-import cn.aotcloud.exception.ErrorCode;
+import cn.aotcloud.exception.BaseExceptionEmpty;
 
 /**
  * @author xkxu
  */
-public class IllegalRequestTokenException extends BaseException {
+public class IllegalRequestTokenException extends BaseExceptionEmpty {
 	
-	private static final ErrorCode ILLEGAL_TOKEN_CODE = new ErrorCode("ac-request-token-illegal", "非法请求令牌。");
-
 	private static final long serialVersionUID = 1L;
 
 	public IllegalRequestTokenException() {
-		super(ILLEGAL_TOKEN_CODE);
+		super("防重放拦截：重放攻击");
+	}
+	
+	public IllegalRequestTokenException(String message) {
+		super(message);
 	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import cn.aotcloud.security.oncetoken.IllegalRequestTokenException;
 import cn.aotcloud.security.oncetoken.RequestToken;
 import cn.aotcloud.security.oncetoken.RequestTokenValidator;
 
@@ -24,12 +25,11 @@ public class DelegateRequestTokenValidator implements RequestTokenValidator {
     }
 
     @Override
-    public boolean validate(RequestToken requestToken) {
+    public void validate(RequestToken requestToken) throws IllegalRequestTokenException {
         RequestTokenValidator requestTokenValidator = getRequestTokenValidator(requestToken);
         if (requestTokenValidator != null) {
-            return requestTokenValidator.validate(requestToken);
+            requestTokenValidator.validate(requestToken);
         }
-        return false;
     }
 
     protected RequestTokenValidator getRequestTokenValidator(RequestToken requestToken) {
