@@ -11,15 +11,8 @@ import cn.aotcloud.security.oncetoken.RequestTokenStore;
 import cn.aotcloud.security.oncetoken.RequestTokenValidator;
 import cn.aotcloud.security.oncetoken.event.IllegalRequestTokenApplicationEvent;
 
-import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.util.AntPathMatcher;
-import org.springframework.util.PathMatcher;
-import org.springframework.web.util.UrlPathHelper;
 
 import java.util.List;
 
@@ -38,10 +31,6 @@ public class DefaultRequestTokenHandler implements RequestTokenHandler, Applicat
 
 	private RequestTokenStore requestTokenStore;
 
-	private PathMatcher pathMatcher = new AntPathMatcher();
-
-	private UrlPathHelper urlPathHelper = new UrlPathHelper();
-
 	private ApplicationEventPublisher applicationEventPublisher;
 
 	private RequestTokenParser requestTokenParser;
@@ -50,19 +39,9 @@ public class DefaultRequestTokenHandler implements RequestTokenHandler, Applicat
 	
 	private List<OnceProtocol> supportedProtocols;
 	
-	private boolean requestTokenEnabled;
-	
-	private List<String> urls = Lists.newArrayList();
-	
-	public DefaultRequestTokenHandler(RequestTokenStore requestTokenStore,
-									  RequestTokenValidator requestTokenValidator,
-									  boolean requestTokenEnabled,
-                                      List<String> urls) {
+	public DefaultRequestTokenHandler(RequestTokenStore requestTokenStore, RequestTokenValidator requestTokenValidator) {
 		this.requestTokenStore = requestTokenStore;
 		this.requestTokenValidator = requestTokenValidator;
-		this.requestTokenEnabled = requestTokenEnabled;
-		this.urls.addAll(urls);
-		
 		requestTokenParser = new DelegateRequestTokenParser(supportedProtocols);
 	}
 
@@ -71,31 +50,15 @@ public class DefaultRequestTokenHandler implements RequestTokenHandler, Applicat
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
-	public boolean support(HttpServletRequest request) {
-		return this.requestTokenEnabled && matchRequest(request);
-	}
-
-	protected boolean matchRequest(HttpServletRequest request) {
-		String requestUri = urlPathHelper.getLookupPathForRequest(request);
-		boolean match = this.urls.stream()
-				.filter(url -> pathMatcher.match(url, requestUri))
-				.findAny()
-				.isPresent();
-		
-		return match || (StringUtils.equalsIgnoreCase(request.getMethod(), HttpMethod.POST.name()) && !StringUtils.contains(request.getContentType(), MediaType.MULTIPART_FORM_DATA_VALUE));
-	}
-
 	@Override
 	public void validate(HttpServletRequest request) throws IllegalRequestTokenException {
-		if (support(request)) {
-			RequestToken requestTokenFromRequest = parseRequestToken(request);
-			try {
-				requestTokenValidator.validate(requestTokenFromRequest);
-				requestTokenStore.save(requestTokenFromRequest);
-			} catch(IllegalRequestTokenException e) {
-				applicationEventPublisher.publishEvent(new IllegalRequestTokenApplicationEvent(requestTokenFromRequest != null ? requestTokenFromRequest : RequestToken.ILLEGAL_REQUEST_TOKEN));
-				throw new BaseExceptionEmpty(ExceptionUtil.getMessage(e));
-			}
+		RequestToken requestTokenFromRequest = parseRequestToken(request);
+		try {
+			requestTokenValidator.validate(requestTokenFromRequest);
+			requestTokenStore.save(requestTokenFromRequest);
+		} catch(IllegalRequestTokenException e) {
+			applicationEventPublisher.publishEvent(new IllegalRequestTokenApplicationEvent(requestTokenFromRequest != null ? requestTokenFromRequest : RequestToken.ILLEGAL_REQUEST_TOKEN));
+			throw new BaseExceptionEmpty(ExceptionUtil.getMessage(e));
 		}
 	}
 
