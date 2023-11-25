@@ -1,4 +1,4 @@
-package cn.aotcloud.security.tamperproofing.utils;
+package cn.aotcloud.utils;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 
-import cn.aotcloud.utils.HttpServletUtil;
+import cn.aotcloud.filter.SafeHttpRequestWrapper;
 
 public class ServletUtils {
 
@@ -19,9 +19,11 @@ public class ServletUtils {
 	}
 
 	public static SafeHttpRequestWrapper getSafeRequest(ServletRequest req) throws IOException {
-		if (req instanceof SafeHttpRequestWrapper)
+		if (req instanceof SafeHttpRequestWrapper) {
 			return (SafeHttpRequestWrapper) req;
-		return new SafeHttpRequestWrapper((HttpServletRequest) req);
+		} else {
+			return new SafeHttpRequestWrapper((HttpServletRequest) req);
+		}
 	}
 
 	public static HttpServletResponse convertResponse(ServletResponse res) {

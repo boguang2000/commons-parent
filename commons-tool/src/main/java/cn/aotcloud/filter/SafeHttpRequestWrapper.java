@@ -1,4 +1,4 @@
-package cn.aotcloud.security.tamperproofing.utils;
+package cn.aotcloud.filter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import org.apache.commons.lang3.StringUtils;
 
 import cn.aotcloud.utils.IOUtils;
+import cn.aotcloud.utils.ServletUtils;
 
 public class SafeHttpRequestWrapper extends HttpServletRequestWrapper {
 	
