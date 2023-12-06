@@ -23,7 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.util.MultiValueMap;
 
-import cn.aotcloud.filter.BodyReaderHttpServletRequestWrapper;
+import cn.aotcloud.filter.BodyHttpRequestWrapper;
 import eu.bitwalker.useragentutils.Browser;
 
 public class HttpServletUtil {
@@ -87,7 +87,7 @@ public class HttpServletUtil {
 		return request.getAttribute(name);
 	}
 	
-	public static String getBodyString(BodyReaderHttpServletRequestWrapper bodyRequest) {
+	public static String getBodyString(BodyHttpRequestWrapper bodyRequest) {
 		return bodyRequest.getBodyString();
 	}
 	

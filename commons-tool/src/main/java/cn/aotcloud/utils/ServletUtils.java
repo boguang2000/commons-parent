@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 
-import cn.aotcloud.filter.SafeHttpRequestWrapper;
+import cn.aotcloud.filter.BodyHttpRequestWrapper;
 
 public class ServletUtils {
 
@@ -18,11 +18,11 @@ public class ServletUtils {
 		return (HttpServletRequest) req;
 	}
 
-	public static SafeHttpRequestWrapper getSafeRequest(ServletRequest req) throws IOException {
-		if (req instanceof SafeHttpRequestWrapper) {
-			return (SafeHttpRequestWrapper) req;
+	public static BodyHttpRequestWrapper getBodyRequest(ServletRequest req) throws IOException {
+		if (req instanceof BodyHttpRequestWrapper) {
+			return (BodyHttpRequestWrapper) req;
 		} else {
-			return new SafeHttpRequestWrapper((HttpServletRequest) req);
+			return new BodyHttpRequestWrapper((HttpServletRequest) req);
 		}
 	}
 

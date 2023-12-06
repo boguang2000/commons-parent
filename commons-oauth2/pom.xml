@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>cn.aotcloud</groupId>
 		<artifactId>commons-parent</artifactId>
-		<version>1.6.5</version>
+		<version>1.6.6</version>
 	</parent>
 	<artifactId>commons-oauth2</artifactId>
 	<packaging>jar</packaging>

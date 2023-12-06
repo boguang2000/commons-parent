@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,36 +13,24 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cn.aotcloud.utils.IOUtils;
 import cn.aotcloud.utils.ServletUtils;
 
-public class SafeHttpRequestWrapper extends HttpServletRequestWrapper {
+public class BodyHttpRequestWrapper extends HttpServletRequestWrapper {
 	
+	protected Logger logger = LoggerFactory.getLogger(getClass());
+
 	private Map<String, String[]> paramValuesMap = new HashMap<String, String[]>();
 	
 	private byte[] buffer = null;
 
-	public SafeHttpRequestWrapper(HttpServletRequest request) throws IOException {
+	public BodyHttpRequestWrapper(HttpServletRequest request) throws IOException {
 		super(request);
-		String method = request.getMethod();
-		if(StringUtils.equalsIgnoreCase(method, "GET")) {
-			paramValuesMap.putAll(request.getParameterMap());
-			copyInputStream();
-		} else if(StringUtils.equalsIgnoreCase(method, "POST") && ServletUtils.isXwwwFormUrlencoded(this)) {
-			paramValuesMap.putAll(request.getParameterMap());
-			copyInputStream();
-		} else if(StringUtils.equalsIgnoreCase(method, "POST") && !ServletUtils.isXwwwFormUrlencoded(this) && !ServletUtils.isMultipartFormData(this)) {
-			paramValuesMap.putAll(request.getParameterMap());
-			copyInputStream();
-		} else if(StringUtils.equalsIgnoreCase(method, "POST") && ServletUtils.isMultipartFormData(this)) {
-			copyInputStream();
-		} else {
-			//if (ServiceFactoryUtil.getServiceFactory().getLog().isErrorEnabled()) {
-			//	ServiceFactoryUtil.getServiceFactory().getLog().error("Request Method:"+method+" Not Allow");
-			//}
-		}
+		this.paramValuesMap.putAll(request.getParameterMap());
+		this.copyInputStream();
 	}
 
 	public void setBuffer(byte[] buffer) {
@@ -92,6 +81,16 @@ public class SafeHttpRequestWrapper extends HttpServletRequestWrapper {
 	@Override
 	public BufferedReader getReader() throws IOException {
 		return new BufferedReader(new InputStreamReader(this.getInputStream(), ServletUtils.readCharacterEncoding(this)));
+	}
+	
+	public String getBodyString() {
+		String bodyString = null;
+		try {
+			bodyString = new String(this.buffer, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			logger.error("buffer转字符串发生UnsupportedEncodingException");
+		}
+		return bodyString;
 	}
 	
 	/**
