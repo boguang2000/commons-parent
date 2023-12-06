@@ -1,21 +1,27 @@
 package cn.aotcloud.filter;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpInputMessage;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import cn.aotcloud.exception.ExceptionUtil;
+import cn.aotcloud.utils.HttpServletUtil;
 import cn.aotcloud.utils.IOUtils;
 import cn.aotcloud.utils.ServletUtils;
 
@@ -25,16 +31,25 @@ public class BodyHttpRequestWrapper extends HttpServletRequestWrapper {
 
 	private Map<String, String[]> paramValuesMap = new HashMap<String, String[]>();
 	
-	private byte[] buffer = null;
-
-	public BodyHttpRequestWrapper(HttpServletRequest request) throws IOException {
+	private ByteArrayInputStream byteArrayInputStream = null;
+	
+	public BodyHttpRequestWrapper(HttpServletRequest request) {
 		super(request);
 		this.paramValuesMap.putAll(request.getParameterMap());
 		this.copyInputStream();
 	}
+	
+	public BodyHttpRequestWrapper(HttpServletRequest request, HttpInputMessage httpInputMessage) {
+		super(request);
+	}
 
-	public void setBuffer(byte[] buffer) {
-		this.buffer = buffer;
+	public void setQueryString(String queryString) {
+		MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUriString("http://localhost/").query(queryString).build().getQueryParams();
+		this.setQueryParams(queryParams);
+	}
+	
+	public void setQueryParams(MultiValueMap<String, String> queryParams) {
+		this.paramValuesMap = HttpServletUtil.transferQueryParams(queryParams);
 	}
 	
 	@Override
@@ -71,11 +86,27 @@ public class BodyHttpRequestWrapper extends HttpServletRequestWrapper {
 
 	@Override
     public ServletInputStream getInputStream() throws IOException {
-		if(this.buffer != null) {
-			return new ServletBufferInputStream(this.buffer);
-		} else {
-			return null;
-		}
+		return new ServletInputStream() {
+            @Override
+            public boolean isFinished() {
+                return false;
+            }
+
+            @Override
+            public boolean isReady() {
+                return false;
+            }
+
+            @Override
+            public void setReadListener(ReadListener readListener) {
+
+            }
+
+            @Override
+            public int read() {
+                return byteArrayInputStream.read();
+            }
+        };
     }
 	
 	@Override
@@ -86,26 +117,25 @@ public class BodyHttpRequestWrapper extends HttpServletRequestWrapper {
 	public String getBodyString() {
 		String bodyString = null;
 		try {
-			bodyString = new String(this.buffer, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			logger.error("buffer转字符串发生UnsupportedEncodingException");
+			if(byteArrayInputStream != null) {
+				bodyString = IOUtils.toString(byteArrayInputStream, HttpServletUtil.getCharacterEncoding(this));
+			} else {
+				logger.error("载荷转换为字符串时流不能为空");
+			}
+		} catch (IOException e) {
+			logger.error("载荷转换为字符串异常：{}", ExceptionUtil.getMessage(e));
 		}
 		return bodyString;
 	}
 	
 	/**
 	 * 备份流
-	 * @throws IOException
 	 */
-	public void copyInputStream() throws IOException {
-		InputStream is = null;
-		try {
-			is = super.getInputStream();
-			if(is != null) {
-				this.buffer = IOUtils.toByteArray(is);
-			}
-		} finally {
-			IOUtils.closeQuietly(is);
+	public void copyInputStream() {
+		try(InputStream in = super.getInputStream()) {
+			this.byteArrayInputStream = new ByteArrayInputStream(IOUtils.toByteArray(in));
+		} catch(IOException e) {
+			logger.error("复制请求流时发生异常：{}", ExceptionUtil.getMessage(e));
 		}
 	}
 }
