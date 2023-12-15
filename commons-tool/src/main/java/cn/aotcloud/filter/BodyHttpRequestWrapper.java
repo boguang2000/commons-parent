@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.aotcloud.exception.ExceptionUtil;
 import cn.aotcloud.utils.IOUtils;
 import cn.aotcloud.utils.ServletUtils;
 
@@ -27,12 +28,20 @@ public class BodyHttpRequestWrapper extends HttpServletRequestWrapper {
 	
 	private byte[] buffer = null;
 
-	public BodyHttpRequestWrapper(HttpServletRequest request) throws IOException {
+	public BodyHttpRequestWrapper(HttpServletRequest request) {
 		super(request);
 		this.paramValuesMap.putAll(request.getParameterMap());
 		this.copyInputStream();
 	}
 
+	public BodyHttpRequestWrapper(HttpServletRequest request, boolean copy) {
+		super(request);
+		if(copy) {
+			this.paramValuesMap.putAll(request.getParameterMap());
+			this.copyInputStream();
+		}
+	}
+	
 	public void setBuffer(byte[] buffer) {
 		this.buffer = buffer;
 	}
@@ -58,6 +67,10 @@ public class BodyHttpRequestWrapper extends HttpServletRequestWrapper {
 	@Override
 	public Map<String, String[]> getParameterMap() {
 		return this.paramValuesMap;
+	}
+
+	public void setParameterMap(Map<String, String[]> paramValuesMap) {
+		this.paramValuesMap = paramValuesMap;
 	}
 
 	@Override
@@ -88,7 +101,7 @@ public class BodyHttpRequestWrapper extends HttpServletRequestWrapper {
 		try {
 			bodyString = new String(this.buffer, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			logger.error("buffer转字符串发生UnsupportedEncodingException");
+			logger.error("请求载荷转换未字符串时异常：{}", ExceptionUtil.getMessage(e));
 		}
 		return bodyString;
 	}
@@ -97,13 +110,15 @@ public class BodyHttpRequestWrapper extends HttpServletRequestWrapper {
 	 * 备份流
 	 * @throws IOException
 	 */
-	public void copyInputStream() throws IOException {
+	public void copyInputStream() {
 		InputStream is = null;
 		try {
 			is = super.getInputStream();
 			if(is != null) {
 				this.buffer = IOUtils.toByteArray(is);
 			}
+		} catch (IOException e) {
+			logger.error("复制请求流时异常：{}", ExceptionUtil.getMessage(e));
 		} finally {
 			IOUtils.closeQuietly(is);
 		}

@@ -2,6 +2,8 @@ package cn.aotcloud.entity;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * @author xkxu
  */
@@ -62,13 +64,14 @@ public class WeiXinResult implements Serializable {
      * @return
      */
    public boolean isSuccess() {
-        //if ("0".equals(errcode)) {
-        if (errcode == 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+	   if(errcode != null) {
+		   return errcode.intValue() == 0;
+	   } else if(StringUtils.equalsAnyIgnoreCase(errmsg, "ok")) {
+		   return true;
+	   } else {
+		   return false;
+	   }
+	}
    
    /**
     * 企信消息事件类型
@@ -107,7 +110,4 @@ public class WeiXinResult implements Serializable {
    	}
    	
    }
-
 }
-
-
