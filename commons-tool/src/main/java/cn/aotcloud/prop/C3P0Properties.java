@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import cn.aotcloud.smcrypto.Sm4Utils;
+import cn.aotcloud.smcrypto.Sm4CBCUtils;
 import cn.aotcloud.smcrypto.exception.InvalidCryptoDataException;
 import cn.aotcloud.smcrypto.exception.InvalidKeyException;
 
@@ -336,7 +336,7 @@ public class C3P0Properties {
 		} else if(StringUtils.startsWith(this.getDz(), "enc(")) {
 			this.jdbcUrl = StringUtils.substringBetween(this.getDz(), "enc(", ")");
 			try {
-				this.jdbcUrl = Sm4Utils.CBC.decryptToText(this.jdbcUrl, sm4K, sm4v);
+				this.jdbcUrl = Sm4CBCUtils.decryptToText(this.jdbcUrl, sm4K, sm4v);
 				logger.info("数据库地址解密后装载成功");
 			} catch (InvalidCryptoDataException | InvalidKeyException e) {
 				logger.error("数据库地址解密失败：{}", e.getMessage());
@@ -354,7 +354,7 @@ public class C3P0Properties {
 		} else if(StringUtils.startsWith(this.getUn(), "enc(")) {
 			this.user = StringUtils.substringBetween(this.getUn(), "enc(", ")");
 			try {
-				this.user = Sm4Utils.CBC.decryptToText(this.user, sm4K, sm4v);
+				this.user = Sm4CBCUtils.decryptToText(this.user, sm4K, sm4v);
 				logger.info("数据库用户名解密后装载成功");
 			} catch (InvalidCryptoDataException | InvalidKeyException e) {
 				logger.error("数据库用户名解密失败：{}", e.getMessage());
@@ -372,7 +372,7 @@ public class C3P0Properties {
 		} else if(StringUtils.startsWith(this.getPw(), "enc(")) {
 			this.password = StringUtils.substringBetween(this.getPw(), "enc(", ")");
 			try {
-				this.password = Sm4Utils.CBC.decryptToText(this.password, sm4K, sm4v);
+				this.password = Sm4CBCUtils.decryptToText(this.password, sm4K, sm4v);
 				logger.info("数据库密码解密后装载成功");
 			} catch (InvalidCryptoDataException | InvalidKeyException e) {
 				logger.error("数据库密码解密失败：{}", e.getMessage());
