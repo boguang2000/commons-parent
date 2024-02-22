@@ -18,7 +18,7 @@ import cn.aotcloud.exception.BaseExceptionEmpty;
 import cn.aotcloud.exception.ExceptionUtil;
 import cn.aotcloud.prop.RedisSafeProperties;
 import cn.aotcloud.smcrypto.Sm3Utils;
-import cn.aotcloud.smcrypto.Sm4CBCUtils;
+import cn.aotcloud.smcrypto.Sm4Utils;
 import cn.aotcloud.smcrypto.exception.InvalidCryptoDataException;
 import cn.aotcloud.smcrypto.exception.InvalidKeyException;
 import cn.aotcloud.smcrypto.exception.InvalidSourceDataException;
@@ -102,7 +102,7 @@ public class RedisConfig {
 				try {
 					String dze = StringUtils.substringBetween(dz, "enc(", "|");
 					String sm3 = StringUtils.substringBetween(dz, "|", ")");
-					dz = Sm4CBCUtils.decryptToText(dze, sm4K, sm4v);
+					dz = Sm4Utils.CBC.decryptToText(dze, sm4K, sm4v);
 					if(!verifySm3(dz, salt, sm3)) {
 						throw new BaseExceptionEmpty("Redis地址被篡改");
 					}
@@ -129,7 +129,7 @@ public class RedisConfig {
 				try {
 					String une = StringUtils.substringBetween(un, "enc(", "|");
 					String sm3 = StringUtils.substringBetween(un, "|", ")");
-					un = Sm4CBCUtils.decryptToText(une, sm4K, sm4v);
+					un = Sm4Utils.CBC.decryptToText(une, sm4K, sm4v);
 					if(!verifySm3(un, salt, sm3)) {
 						throw new BaseExceptionEmpty("Redis用户名被篡改");
 					}
@@ -156,7 +156,7 @@ public class RedisConfig {
 				try {
 					String pwe = StringUtils.substringBetween(pw, "enc(", "|");
 					String sm3 = StringUtils.substringBetween(pw, "|", ")");
-					pw = Sm4CBCUtils.decryptToText(pwe, sm4K, sm4v);
+					pw = Sm4Utils.CBC.decryptToText(pwe, sm4K, sm4v);
 					if(!verifySm3(pw, salt, sm3)) {
 						throw new BaseExceptionEmpty("Redis密码被篡改");
 					}

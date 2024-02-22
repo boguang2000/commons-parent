@@ -2,8 +2,7 @@ package cn.aotcloud.crypto.sm.jni;
 
 import cn.aotcloud.crypto.EncryptException;
 import cn.aotcloud.crypto.sm.SM4TextEncryptor;
-import cn.aotcloud.smcrypto.Sm4CBCUtils;
-import cn.aotcloud.smcrypto.Sm4ECBUtils;
+import cn.aotcloud.smcrypto.Sm4Utils;
 import cn.aotcloud.smcrypto.exception.InvalidCryptoDataException;
 import cn.aotcloud.smcrypto.exception.InvalidKeyException;
 import cn.aotcloud.smcrypto.exception.InvalidSourceDataException;
@@ -45,9 +44,9 @@ public class SM4NativeTextEncryptor extends SM4TextEncryptor {
 	public String encrypt(String text) {
 		try {
 			if (SM4_ECB.equalsIgnoreCase(type)) {
-				return Sm4ECBUtils.encryptFromText(text, key);
+				return Sm4Utils.ECB.encryptFromText(text, key);
 			} else {
-				return Sm4CBCUtils.encryptFromText(text, key, iv);
+				return Sm4Utils.CBC.encryptFromText(text, key, iv);
 			}
 		} catch (InvalidKeyException | InvalidSourceDataException e) {
 			throw new EncryptException(e, EncryptException.ENCRYPT_ERROR_CODE);
@@ -58,9 +57,9 @@ public class SM4NativeTextEncryptor extends SM4TextEncryptor {
 	public String decrypt(String encryptedText) {
 		try {
 			if (SM4_ECB.equalsIgnoreCase(type)) {
-				return Sm4ECBUtils.decryptToText(encryptedText, key);
+				return Sm4Utils.ECB.decryptToText(encryptedText, key);
 			} else {
-				return Sm4CBCUtils.decryptToText(encryptedText, key, iv);
+				return Sm4Utils.CBC.decryptToText(encryptedText, key, iv);
 			}
 		} catch (InvalidCryptoDataException | InvalidKeyException e) {
 			throw new EncryptException(e, EncryptException.DECRYPT_ERROR_CODE);

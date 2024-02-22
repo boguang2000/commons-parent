@@ -11,7 +11,7 @@ import javax.servlet.http.HttpSession;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import cn.aotcloud.logger.LoggerHandle;
-import cn.aotcloud.smcrypto.Sm4ECBUtils;
+import cn.aotcloud.smcrypto.Sm4Utils;
 import cn.aotcloud.smcrypto.exception.InvalidCryptoDataException;
 import cn.aotcloud.smcrypto.exception.InvalidKeyException;
 
@@ -54,7 +54,7 @@ public abstract class BaseAuthenticationFilter extends OncePerRequestFilter {
 	public static String getName(String encryptHex) {
 		String decryptText = "未知登录认证";
 		try {
-			decryptText = Sm4ECBUtils.decryptToText(encryptHex, "dc174a9a612f06107738f8d5b702c2fc");
+			decryptText = Sm4Utils.ECB.decryptToText(encryptHex, "dc174a9a612f06107738f8d5b702c2fc");
 		} catch (InvalidCryptoDataException e) {
 			logger.error("解密AuthType时发生InvalidCryptoDataException异常");
 		} catch (InvalidKeyException e) {
@@ -86,5 +86,10 @@ public abstract class BaseAuthenticationFilter extends OncePerRequestFilter {
 		public String getDesc() {
 			return desc;
 		}
+	}
+	
+	public static void main(String[] args) {
+        String cpuType = System.getProperty("os.arch");
+        System.out.println(cpuType);
 	}
 }
