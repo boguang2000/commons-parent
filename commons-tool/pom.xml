@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>cn.aotcloud</groupId>
 		<artifactId>commons-parent</artifactId>
-		<version>2.0.2</version>
+		<version>2.0.3</version>
 	</parent>
 	<artifactId>commons-tool</artifactId>
     <name>commons-tool</name>
@@ -16,29 +16,29 @@
 	<properties>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
-		<spring-framework.version>5.3.27</spring-framework.version>
+		<spring-framework.version>5.3.29</spring-framework.version>
 	</properties>
 	
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
-			<version>2.5.14</version>
+			<version>2.5.15</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<version>2.5.14</version>
+			<version>2.5.15</version>
 		</dependency>
 		<dependency>
 	      	<groupId>org.springframework.boot</groupId>
 	      	<artifactId>spring-boot-starter-jdbc</artifactId>
-	      	<version>2.5.14</version>
+	      	<version>2.5.15</version>
 	    </dependency>
 	    <dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
-			<version>2.5.14</version>
+			<version>2.5.15</version>
 		</dependency>
 	    <dependency>
             <groupId>org.springframework.session</groupId>
@@ -148,7 +148,7 @@
 		<dependency>
 			<groupId>cn.aotcloud</groupId>
 			<artifactId>smcrypto-core</artifactId>
-			<version>1.1.1</version>
+			<version>1.1.2</version>
 		</dependency>
 	</dependencies>
 	
