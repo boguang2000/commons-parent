@@ -5,6 +5,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExceptionUtil {
     
@@ -47,5 +49,21 @@ public class ExceptionUtil {
             }
         }
     }
+	
+	public static void printLog(Exception exception, boolean showMethodName) {
+		StackTraceElement[] stackTraceElements = exception.getStackTrace();
+		if(stackTraceElements != null && stackTraceElements.length > 0) {
+			String className = stackTraceElements[0].getClassName();
+			Logger logger = LoggerFactory.getLogger(className);
+			if(showMethodName) {
+				String methodName = stackTraceElements[0].getMethodName();
+				String fileName = stackTraceElements[0].getFileName();
+				int lineNumber = stackTraceElements[0].getLineNumber();
+				logger.error("{}({}:{}):{}", methodName, fileName, lineNumber, getMessage(exception));
+			} else {
+				logger.error("{}:{}", getMessage(exception));
+			}
+		}
+	}
 }
 
