@@ -60,7 +60,11 @@ public abstract class ColumnDecryptInterceptor implements Interceptor {
     private <T> T decrypt(T result) throws Exception {
         //取出resultType的类
         Class<?> resultClass = result.getClass();
-        Field[] declaredFields = resultClass.getDeclaredFields();
+        Field idField = resultClass.getDeclaredField("id");
+        idField.setAccessible(true);
+    	String id = String.valueOf(idField.get(result));
+
+    	Field[] declaredFields = resultClass.getDeclaredFields();
         for (Field field : declaredFields) {
             //取出所有被EncryptedColumn注解的字段
             EncryptedColumn sensitiveField = field.getAnnotation(EncryptedColumn.class);
@@ -71,7 +75,7 @@ public abstract class ColumnDecryptInterceptor implements Interceptor {
                 if (object instanceof String) {
                     String value = (String) object;
                     //String key = this.getKey(result);
-                    String data = this.decryptData(resultClass.getSimpleName(), field.getName(), result, value);
+                    String data = this.decryptData(resultClass, field, result, id, value);
                     field.set(result, data);
                 }
             }
@@ -103,5 +107,5 @@ public abstract class ColumnDecryptInterceptor implements Interceptor {
     	return null;
     }
     
-    public abstract String decryptData(String className, String fieldName, Object result, String data);
+    public abstract String decryptData(Class<?> resultClass, Field field, Object result, String id, String data);
 }

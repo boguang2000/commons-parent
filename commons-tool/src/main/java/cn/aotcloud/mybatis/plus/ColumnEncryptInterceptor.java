@@ -141,6 +141,15 @@ public abstract class ColumnEncryptInterceptor extends JsqlParserSupport impleme
     private void encryptEntity(Object parameter) {
         //取出parameterType的类
         Class<?> resultClass = parameter.getClass();
+        String id = null;
+		try {
+			Field idField = resultClass.getDeclaredField("id");
+			idField.setAccessible(true);
+	    	id = String.valueOf(idField.get(parameter));
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+    	
         Field[] declaredFields = resultClass.getDeclaredFields();
         for (Field field : declaredFields) {
             //取出所有被EncryptedColumn注解的字段
@@ -158,7 +167,7 @@ public abstract class ColumnEncryptInterceptor extends JsqlParserSupport impleme
                     String value = (String) object;
                     //对注解的字段进行逐一加密
                     try {
-                        field.set(parameter, this.encryptData(value));
+                        field.set(parameter, this.encryptData(resultClass, field, id, value));
                     } catch (IllegalAccessException e) {
                         continue;
                     }
@@ -223,6 +232,8 @@ public abstract class ColumnEncryptInterceptor extends JsqlParserSupport impleme
             }
         }
     }
+    
+    public abstract String encryptData(Class<?> resultClass, Field field, String id, String data);
     
     public abstract String encryptData(String data);
 }
