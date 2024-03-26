@@ -12,8 +12,6 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 
 import cn.aotcloud.logger.LoggerHandle;
-import cn.aotcloud.smcrypto.Sm3Utils;
-import cn.aotcloud.smcrypto.exception.InvalidSourceDataException;
 import cn.aotcloud.utils.UUIDGenerator;
 
 public class DataRecoverUtil {
@@ -40,49 +38,92 @@ public class DataRecoverUtil {
 		}
 	}
 	
-	public String dataInsertOrUpdateRecover(String tableName, String id, String columnName, String currentData) {
+	/**
+	 * 更新或新增防篡改记录
+	 * @param tableName
+	 * @param tableId
+	 * @param columnName
+	 * @param currentData
+	 * @param currentSign
+	 * @return
+	 */
+	public String insertOrUpdatedataRecover(String tableName, String tableId, String columnName, String currentData, String currentSign) {
+		Map<String, String> columnMap = this.selectDataRecover(tableName, tableId, columnName);
+		String newData = null;
+		if(columnMap != null) {
+			String columnSign  = columnMap.get("columnSign");
+			if(!StringUtils.equals(currentSign, columnSign)) {
+				logger.debug("数据防篡改检查：更新防篡改记录");
+				int update = this.updateDataRecover(tableName, tableId, columnName, currentData, currentSign);
+				if(update == 1) {
+					newData = currentData;
+				}
+			}
+		} else {
+			logger.debug("数据防篡改检查：新增防篡改记录");
+			int insert = this.insertDataRecover(tableName, tableId, columnName, currentData, currentSign);
+			if(insert == 1) {
+				newData = currentData;
+			}
+		}
+		
+		return newData;
+	}
+	
+	/**
+	 * 检查数据篡改并还原宿主表记录，还原成功返回还原后的值，还原失败则返回null
+	 * @param tableName
+	 * @param tableId
+	 * @param columnName
+	 * @param currentData
+	 * @param currentSign
+	 * @return
+	 */
+	public String verifyDataRecover(String tableName, String tableId, String columnName, String currentData, String currentSign) {
+		Map<String, String> columnMap = this.selectDataRecover(tableName, tableId, columnName);
+		String newData = null;
+		if(columnMap != null) {
+			String columnSign  = columnMap.get("columnSign");
+			String columnValue = columnMap.get("columnValue");
+			if(!StringUtils.equals(currentSign, columnSign)) {
+				logger.warn("数据防篡改检查：数据被篡改，执行还原");
+				int update = this.doDataRecover(tableName, tableId, columnName, columnValue);
+				if(update == 1) {
+					newData = columnValue;
+				}
+			}
+		} else {
+			logger.debug("数据防篡改检查：无还原记录，新增记录");
+			int insert = this.insertDataRecover(tableName, tableId, columnName, currentData, currentSign);
+			if(insert == 1) {
+				newData = currentData;
+			}
+		}
+		
+		return newData;
+	}
+	
+	public Map<String, String> selectDataRecover(String tableName, String tableId, String columnName) {
 		columnName = this.getColumnName(columnName);
 		Connection connection = null;
 		PreparedStatement selectStatement = null;
-		PreparedStatement updateStatement = null;
 		ResultSet resultSet = null;
         try {
         	connection = this.dataSource.getConnection();
         	String selectSql = "select column_value, column_sign from "+this.dataRecoverTableName+" where table_name= ? and table_id = ? and column_name=?;";
             selectStatement = connection.prepareStatement(selectSql);
             selectStatement.setString(1, tableName);
-            selectStatement.setString(2, id);
+            selectStatement.setString(2, tableId);
             selectStatement.setString(3, columnName);
             
             resultSet = selectStatement.executeQuery();
             if (resultSet.next()) {
-            	String columnSign  = resultSet.getString("column_sign");
-            	String currentSign = Sm3Utils.encryptFromText(currentData);
-            	if(!StringUtils.equals(currentSign, columnSign)) {
-            		String updateSql = "update "+this.dataRecoverTableName+" set column_value=?, column_sign=? where table_name= ? and table_id = ? and column_name=?;";
-                    updateStatement = connection.prepareStatement(updateSql);
-                    updateStatement.setString(1, currentData);
-                    updateStatement.setString(2, currentSign);
-                    updateStatement.setString(3, tableName);
-                    updateStatement.setString(4, id);
-                    updateStatement.setString(5, columnName);
-                    int update = updateStatement.executeUpdate();
-            		return update == 1 ? currentData : null;
-            	}
-            } else {
-            	String currentSign = Sm3Utils.encryptFromText(currentData);
-            	String insertSql = "insert "+this.dataRecoverTableName+"(id,table_name,table_id,column_name,column_value,column_sign) values(?,?,?,?,?,?);";
-                updateStatement = connection.prepareStatement(insertSql);
-                updateStatement.setString(1, UUIDGenerator.generate());
-                updateStatement.setString(2, tableName);
-                updateStatement.setString(3, id);
-                updateStatement.setString(4, columnName);
-                updateStatement.setString(5, currentData);
-                updateStatement.setString(6, currentSign);
-                int insert = updateStatement.executeUpdate();
-        		return insert == 1 ? currentData : null;
+            	Map<String, String> columnMap = new HashMap<String, String>();
+            	columnMap.put("columnSign", resultSet.getString("column_sign"));
+            	columnMap.put("columnValue", resultSet.getString("column_value"));
+            	return columnMap;
             }
-        } catch (SQLException | NullPointerException | InvalidSourceDataException e) {
+        } catch (SQLException | NullPointerException e) {
         	logger.error(e);
 		} finally{
         	if(resultSet != null) {
@@ -95,13 +136,6 @@ public class DataRecoverUtil {
         	if(selectStatement != null) {
 	        	try {
 	        		selectStatement.close();
-				} catch (SQLException e) {
-					logger.error(e);
-				}
-        	}
-        	if(updateStatement != null) {
-	        	try {
-	        		updateStatement.close();
 				} catch (SQLException e) {
 					logger.error(e);
 				}
@@ -118,63 +152,24 @@ public class DataRecoverUtil {
 		return null;
 	}
 	
-	public String dataVerifyAndRecover(String tableName, String id, String columnName, String currentData) {
+	public int updateDataRecover(String tableName, String tableId, String columnName, String currentData, String currentSign) {
 		columnName = this.getColumnName(columnName);
 		Connection connection = null;
-		PreparedStatement selectStatement = null;
 		PreparedStatement updateStatement = null;
-		ResultSet resultSet = null;
+		int update = 0;
         try {
         	connection = this.dataSource.getConnection();
-        	String selectSql = "select column_value, column_sign from "+this.dataRecoverTableName+" where table_name= ? and table_id = ? and column_name=?;";
-            selectStatement = connection.prepareStatement(selectSql);
-            selectStatement.setString(1, tableName);
-            selectStatement.setString(2, id);
-            selectStatement.setString(3, columnName);
-            
-            resultSet = selectStatement.executeQuery();
-            if (resultSet.next()) {
-            	String columnValue = resultSet.getString("column_value");
-            	String columnSign  = resultSet.getString("column_sign");
-            	String currentSign = Sm3Utils.encryptFromText(currentData);
-            	if(!StringUtils.equals(currentSign, columnSign)) {
-            		String updateSql = "update "+tableName+" set "+ columnName +"=? where id=?;";
-                    updateStatement = connection.prepareStatement(updateSql);
-                    updateStatement.setString(1, columnValue);
-                    updateStatement.setString(2, id);
-                    int update = updateStatement.executeUpdate();
-            		return update == 1 ? columnValue : null;
-            	}
-            } else {
-            	String currentSign = Sm3Utils.encryptFromText(currentData);
-            	String insertSql = "insert "+this.dataRecoverTableName+"(id,table_name,table_id,column_name,column_value,column_sign) values(?,?,?,?,?,?);";
-                updateStatement = connection.prepareStatement(insertSql);
-                updateStatement.setString(1, UUIDGenerator.generate());
-                updateStatement.setString(2, tableName);
-                updateStatement.setString(3, id);
-                updateStatement.setString(4, columnName);
-                updateStatement.setString(5, currentData);
-                updateStatement.setString(6, currentSign);
-                int insert = updateStatement.executeUpdate();
-        		return insert == 1 ? currentData : null;
-            }
-        } catch (SQLException | NullPointerException | InvalidSourceDataException e) {
+        	String updateSql = "update "+this.dataRecoverTableName+" set column_value=?, column_sign=? where table_name= ? and table_id = ? and column_name=?;";
+            updateStatement = connection.prepareStatement(updateSql);
+            updateStatement.setString(1, currentData);
+            updateStatement.setString(2, currentSign);
+            updateStatement.setString(3, tableName);
+            updateStatement.setString(4, tableId);
+            updateStatement.setString(5, columnName);
+            update = updateStatement.executeUpdate();
+        } catch (SQLException | NullPointerException e) {
         	logger.error(e);
 		} finally{
-        	if(resultSet != null) {
-	        	try {
-	        		resultSet.close();
-				} catch (SQLException e) {
-					logger.error(e);
-				}
-        	}
-        	if(selectStatement != null) {
-	        	try {
-	        		selectStatement.close();
-				} catch (SQLException e) {
-					logger.error(e);
-				}
-        	}
         	if(updateStatement != null) {
 	        	try {
 	        		updateStatement.close();
@@ -191,7 +186,79 @@ public class DataRecoverUtil {
         	}
         }
 		
-		return null;
+		return update;
+	}
+	
+	public int insertDataRecover(String tableName, String tableId, String columnName, String currentData, String currentSign) {
+		columnName = this.getColumnName(columnName);
+		Connection connection = null;
+		PreparedStatement updateStatement = null;
+		int insert = 0;
+        try {
+        	connection = this.dataSource.getConnection();
+        	String insertSql = "insert "+this.dataRecoverTableName+"(id,table_name,table_id,column_name,column_value,column_sign) values(?,?,?,?,?,?);";
+            updateStatement = connection.prepareStatement(insertSql);
+            updateStatement.setString(1, UUIDGenerator.generate());
+            updateStatement.setString(2, tableName);
+            updateStatement.setString(3, tableId);
+            updateStatement.setString(4, columnName);
+            updateStatement.setString(5, currentData);
+            updateStatement.setString(6, currentSign);
+            insert = updateStatement.executeUpdate();
+        } catch (SQLException | NullPointerException e) {
+        	logger.error(e);
+		} finally{
+        	if(updateStatement != null) {
+	        	try {
+	        		updateStatement.close();
+				} catch (SQLException e) {
+					logger.error(e);
+				}
+        	}
+        	if(connection != null) {
+	            try {
+	            	connection.close();
+				} catch (SQLException e) {
+					logger.error(e);
+				}
+        	}
+        }
+		
+		return insert;
+	}
+	
+	public int doDataRecover(String tableName, String tableId, String columnName, String columnValue) {
+		columnName = this.getColumnName(columnName);
+		Connection connection = null;
+		PreparedStatement updateStatement = null;
+		int update = 0;
+        try {
+        	connection = this.dataSource.getConnection();
+        	String updateSql = "update "+tableName+" set "+ columnName +"=? where id=?;";
+            updateStatement = connection.prepareStatement(updateSql);
+            updateStatement.setString(1, columnValue);
+            updateStatement.setString(2, tableId);
+            update = updateStatement.executeUpdate();
+        } catch (SQLException | NullPointerException e) {
+        	logger.error(e);
+		} finally{
+        	if(updateStatement != null) {
+	        	try {
+	        		updateStatement.close();
+				} catch (SQLException e) {
+					logger.error(e);
+				}
+        	}
+        	if(connection != null) {
+	            try {
+	            	connection.close();
+				} catch (SQLException e) {
+					logger.error(e);
+				}
+        	}
+        }
+		
+		return update;
 	}
 	
 	public String getColumnName(String columnName) {
